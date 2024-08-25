@@ -51,44 +51,42 @@ def volume_oscillator(data, short_period=14, long_period=28):
 # Apply Volume Oscillator
 data = volume_oscillator(data)
 
-# Plot the data with phases and volume oscillator on separate charts
-plt.figure(figsize=(14, 12))
+# Save the data to a CSV file
+data.to_csv('wyckoff_analysis.csv')
 
-# Plot the close price
-plt.subplot(4, 1, 1)
+# Plot the data in separate windows
+plt.figure(figsize=(14, 6))
 plt.plot(data['Close'], label='Close Price', color='blue')
 plt.title(f'{symbol} Close Price')
 plt.xlabel('Date')
 plt.ylabel('Price')
 plt.legend()
+plt.show()
 
-# Plot the moving averages
-plt.subplot(4, 1, 2)
+plt.figure(figsize=(14, 6))
 plt.plot(data['50_MA'], label='50-Day Moving Average', color='orange')
 plt.plot(data['200_MA'], label='200-Day Moving Average', color='green')
 plt.title(f'{symbol} Moving Averages')
 plt.xlabel('Date')
 plt.ylabel('Price')
 plt.legend()
+plt.show()
 
-# Highlight Phases
-plt.subplot(4, 1, 3)
-for phase, color in zip(['Accumulation', 'Markup', 'Distribution', 'Markdown'], ['blue', 'green', 'red', 'purple']):
-    plt.fill_between(data.index, data['Close'], where=data['Phase'] == phase, color=color, alpha=0.1, label=phase)
+plt.figure(figsize=(14, 6))
+for phase, color in zip(['Accumulation', 'Markup', 'Distribution', 'Markdown'], ['darkblue', 'darkgreen', 'darkred', 'purple']):
+    plt.fill_between(data.index, data['Close'], where=data['Phase'] == phase, color=color, alpha=0.2, label=phase)
 plt.plot(data['Close'], label='Close Price', color='blue')
 plt.title(f'{symbol} Wyckoff Phases')
 plt.xlabel('Date')
 plt.ylabel('Price')
 plt.legend()
+plt.show()
 
-# Plot the volume oscillator
-plt.subplot(4, 1, 4)
+plt.figure(figsize=(14, 6))
 plt.plot(data['Vol_Osc'], label='Volume Oscillator', color='purple')
 plt.axhline(0, color='black', linestyle='--')
 plt.title(f'{symbol} Volume Oscillator')
 plt.xlabel('Date')
 plt.ylabel('Volume Oscillator (%)')
 plt.legend()
-
-plt.tight_layout()
 plt.show()

@@ -90,3 +90,80 @@ plt.xlabel('Date')
 plt.ylabel('Volume Oscillator (%)')
 plt.legend()
 plt.show()
+
+# Calculate RSI
+data['RSI'] = ta.momentum.RSIIndicator(data['Close'], window=14).rsi()
+
+# Calculate MACD
+# data['MACD'] = ta.trend.MACD(data['Close']).macd()
+# data['Signal_Line'] = ta.trend.MACD(data['Close']).macd_signal()
+
+# Example Trading Signal Logic
+data['Signal'] = np.nan
+for i in range(1, len(data)):
+    if data['RSI'].iloc[i] < 30 and data['Vol_Osc'].iloc[i] > 0:
+        data.loc[data.index[i], 'Signal'] = 'Buy'
+    elif data['RSI'].iloc[i] > 70 and data['Vol_Osc'].iloc[i] < 0:
+        data.loc[data.index[i], 'Signal'] = 'Sell'
+
+# Plot RSI
+plt.figure(figsize=(14, 6))
+plt.plot(data['RSI'], label='RSI', color='orange')
+plt.axhline(30, color='red', linestyle='--')
+plt.axhline(70, color='red', linestyle='--')
+plt.title(f'{symbol} RSI')
+plt.xlabel('Date')
+plt.ylabel('RSI')
+plt.legend()
+plt.show()
+
+
+# Save the data to a CSV file with signals
+# data.to_csv('wyckoff_with_signals.csv')
+
+
+# Calculate average volume during each phase
+average_volumes = data.groupby('Phase')['Volume'].mean()
+
+# Print the average volumes
+print("Average Volumes During Each Phase:")
+print(average_volumes)
+
+# You can also visualize this
+plt.figure(figsize=(10, 6))
+average_volumes.plot(kind='bar', color=['darkblue', 'darkgreen', 'darkred', 'purple'])
+plt.title(f'Average Volume During Wyckoff Phases - {symbol}')
+plt.xlabel('Wyckoff Phases')
+plt.ylabel('Average Volume')
+plt.show()
+
+# Calculate RSI
+data['RSI'] = ta.momentum.RSIIndicator(data['Close'], window=14).rsi()
+
+# Calculate MACD
+# data['MACD'] = ta.trend.MACD(data['Close']).macd()
+# data['Signal_Line'] = ta.trend.MACD(data['Close']).macd_signal()
+
+# Example Trading Signal Logic
+data['Signal'] = np.nan
+for i in range(1, len(data)):
+    if data['RSI'].iloc[i] < 30 and data['Vol_Osc'].iloc[i] > 0:
+        data.loc[data.index[i], 'Signal'] = 'Buy'
+    elif data['RSI'].iloc[i] > 70 and data['Vol_Osc'].iloc[i] < 0:
+        data.loc[data.index[i], 'Signal'] = 'Sell'
+
+# Plot RSI
+plt.figure(figsize=(14, 6))
+plt.plot(data['RSI'], label='RSI', color='orange')
+plt.axhline(30, color='red', linestyle='--')
+plt.axhline(70, color='red', linestyle='--')
+plt.title(f'{symbol} RSI')
+plt.xlabel('Date')
+plt.ylabel('RSI')
+plt.legend()
+plt.show()
+
+
+# Save the data to a CSV file with signals
+data.to_csv('wyckoff_with_signals.csv')
+

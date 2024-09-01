@@ -4,8 +4,8 @@ import matplotlib.pyplot as plt
 from scipy.fft import fft, ifft
 import yfinance as yf
 
-# Download historical data for CL=F (Crude Oil Futures) within the last 3 months with an hourly interval
-symbol = 'CL=F'
+# Download historical data for NG=F (Natural Gas Futures) within the last 3 months with an hourly interval
+symbol = 'NG=F'
 data = yf.download(symbol, period="3mo", interval="1h")
 
 # Calculate moving averages
@@ -37,15 +37,37 @@ significant_time_series = np.zeros_like(volume_oscillator, dtype=float)
 for idx in high_amp_indices:
     significant_time_series += np.real(ifft(fft_values * (np.arange(len(fft_values)) == idx)))
 
-# Generate Trading Signals only when the amplitude of the volume oscillator is high
+# Wyckoff Method using Simplified Logic
+def wyckoff_method(data):
+    for i in range(len(data)):
+        if data['50_MA'].iloc[i] > data['200_MA'].iloc[i]:
+            if data['Close'].iloc[i] < data['50_MA'].iloc[i] and data['Close'].iloc[i] > data['200_MA'].iloc[i]:
+                data.loc[data.index[i], 'Phase'] = 'Distribution'
+            elif data['Close'].iloc[i] > data['50_MA'].iloc[i]:
+                data.loc[data.index[i], 'Phase'] = 'Markup'
+            elif data['Close'].iloc[i] < data['200_MA'].iloc[i]:
+                data.loc[data.index[i], 'Phase'] = 'Markdown'
+        elif data['50_MA'].iloc[i] < data['200_MA'].iloc[i]:
+            if data['Close'].iloc[i] < data['50_MA'].iloc[i] and data['Close'].iloc[i] > data['200_MA'].iloc[i]:
+                data.loc[data.index[i], 'Phase'] = 'Accumulation'
+            elif data['Close'].iloc[i] > data['50_MA'].iloc[i]:
+                data.loc[data.index[i], 'Phase'] = 'Markup'
+            elif data['Close'].iloc[i] < data['200_MA'].iloc[i]:
+                data.loc[data.index[i], 'Phase'] = 'Markdown'
+    return data
+
+# Apply the Wyckoff Method logic
+data = wyckoff_method(data)
+
+# Generate Trading Signals only when the amplitude of the volume oscillator is high and meets Wyckoff criteria
 high_amplitude_threshold = np.percentile(significant_time_series, 90)  # Top 10% of amplitude in time series
 data['Signal'] = np.where(
-    (significant_time_series > high_amplitude_threshold) & (data['Close'] > data['Close'].rolling(20).mean()), 'Buy', 
-    np.where((significant_time_series < -high_amplitude_threshold) & (data['Close'] < data['Close'].rolling(20).mean()), 'Sell', None)
+    (significant_time_series > high_amplitude_threshold) & (data['Phase'] == 'Markup'), 'Buy', 
+    np.where((significant_time_series < -high_amplitude_threshold) & (data['Phase'] == 'Markdown'), 'Sell', None)
 )
 
 # Save data to a file
-data.to_csv('trading_signals_with_high_amplitude.csv')
+data.to_csv('trading_signals_with_high_amplitude_wyckoff.csv')
 
 # Filter out the non-signal data points before plotting
 filtered_data = data[data['Signal'].notna()]
@@ -67,5 +89,5 @@ colors = np.where(filtered_data['Signal'] == 'Buy', 'green', np.where(filtered_d
 ax1.scatter(filtered_data.index, filtered_data['Close'], c=colors, label='Trading Signals', marker='o')
 
 fig.tight_layout()
-plt.title('Price and High Amplitude Frequency Patterns with Trading Signals')
+plt.title('Price and High Amplitude Frequency Patterns with Trading Signals (Wyckoff Method)')
 plt.show()
